@@ -5,7 +5,7 @@ from typing import List
 import firebase_admin
 from firebase_admin import credentials, db
 
-from db.model.in10_point import In10Info
+from db.model.in10_info import In10Info
 from db.model.in10_word import In10Word
 
 logger = logging.getLogger(__name__)
