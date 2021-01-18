@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 from typing import List
 
 import discord
@@ -57,6 +58,8 @@ class DiscordClient(discord.Client):
     async def handle_command(self, channel: discord.TextChannel, command: List[str]):
         if command[0] == "rank":
             await self.rank(channel, command[1:])
+        elif command[0] == "get":
+            await self.get_user_info(channel, command[1:])
         pass
 
     async def rank(self, channel: discord.TextChannel, command: List[str]):
@@ -85,6 +88,28 @@ class DiscordClient(discord.Client):
         content += "```"
 
         await msg.edit(content=content)
+
+    async def get_user_info(self, channel: discord.TextChannel, command: List[str]):
+        if len(command) < 1:
+            await channel.send("💥 **犯すぞ**: ユーザーIDかメンションが必要です。")
+            return
+
+        target_user_id = -1
+        mention_match = re.match("<@!(\d+)>", command[0])
+        if mention_match is not None:
+            target_user_id = int(mention_match[1])
+        elif command[0].isdigit():
+            target_user_id = int(command[0])
+        else:
+            await channel.send("💥 **犯すぞ**: ユーザIDかメンションをください、どっちにも解釈できませんでした")
+            return
+
+        in10_data = self.db.get_user_in10_point(target_user_id)
+        embed = discord.Embed(colour=0xff00ff, title=f"{in10_data.name} さんの淫獣ポイント")
+        embed.add_field(name="淫獣ポイント", value=f"**{in10_data.point}** pt(s).", inline=True)
+        embed.add_field(name="カウント回数", value=f"**{in10_data.count}** 回", inline=True)
+        embed.add_field(name="平均ポイント", value=f"**{in10_data.point / in10_data.count}** pt/回", inline=False)
+        await channel.send(embed=embed)
 
 
 
