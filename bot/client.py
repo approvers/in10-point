@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import re
+import random
 from typing import List
 
 import discord
@@ -12,6 +13,15 @@ logger = logging.getLogger(__name__)
 
 
 class DiscordClient(discord.Client):
+    SIN = [
+        "例えば、`firebase.py`ですべてのModelのCRUDをやっています。",
+        "例えば、コマンドの判定は愚直に`elif`をぐりぐり回してます。",
+        "例えば、`In10Info`というModelがあります。伝わらない。",
+        "例えば、メッセージが全部ハードコーディングされてます。認証情報とかはさすがに環境変数から読んでます。",
+        "3時間で作ったので仕方がない。",
+        "このメッセージのリストが`client.py`にあるのがすでにおかしい。"
+    ]
+
     def __init__(self, db: FirebaseRealtimeDatabase, init_message_channel: int, **options):
         super().__init__(**options)
         self.db = db
@@ -115,5 +125,17 @@ class DiscordClient(discord.Client):
         embed.add_field(name="平均ポイント", value=f"**{in10_data.point / in10_data.count}** pt/回", inline=False)
         await channel.send(embed=embed)
 
+    async def help(self, channel: discord.TextChannel):
+        await channel.send(
+            "<:sasuin:759097700326703179> **`in10-point` | 淫獣ポイントBot**\n"
+            "このサーバにいる人がどれくらい、どの程度変なこと言ったかを数値化して参照するためのBotです。\n"
+            "```rank [制限: int]\n  淫獣ポイントのランキングを表示します。```"
+            "```get <対象ユーザ: int/メンション>\n  特定のユーザの詳細情報を表示します。```"
+            "```add <ワード: str>\n  新しく単語を追加します。```"
+            "```check <ワード: str>\n  指定した言葉がアウトかどうかを表示します。淫獣ポイントには加算されません。```"
+            "```\nhelp\n  これです。```\n"
+            f"免責事項: めんどくさくて設計をほぼ考えていません。{random.sample(DiscordClient.SIN, 1)[0]}\n"
+            "そのうちリファクタするかもしれません。"
+        )
 
 
