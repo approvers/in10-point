@@ -31,10 +31,12 @@ class DiscordClient(discord.Client):
 
     async def on_ready(self):
         channel = await self.fetch_channel(self.init_message_channel)
+
         sent_message = await channel.send("🚀 `in10.json` を読み込んでいます。")
         self.sync()
 
         await sent_message.edit(content="🚀 準備完了です！")
+        logger.info("Discord bot has been initialized successfully.")
 
     async def on_message(self, message: discord.Message):
         if message.author.bot:
@@ -76,6 +78,8 @@ class DiscordClient(discord.Client):
             await self.force_sync(channel)
         elif command[0] == "help":
             await self.help(channel)
+        else:
+            await channel.send("💥 **犯すぞ**: コマンドがないです。`in10/help`で確認してみてください。")
 
     async def rank(self, channel: discord.TextChannel, command: List[str]):
         raw_limit = 10
@@ -99,7 +103,7 @@ class DiscordClient(discord.Client):
         for i in range(len(stripped_in10_info)):
             in10_info = stripped_in10_info[i]
             content += f"#{str(i + 1).rjust(padding_length)}: {in10_info.name} " \
-                      f"({in10_info.point}pt, {in10_info.count}回)\n"
+                       f"({in10_info.point}pt, {in10_info.count}回)\n"
         content += "```"
 
         await msg.edit(content=content)
@@ -109,8 +113,7 @@ class DiscordClient(discord.Client):
             await channel.send("💥 **犯すぞ**: ユーザーIDかメンションが必要です。")
             return
 
-        target_user_id = -1
-        mention_match = re.match("<@!(\d+)>", command[0])
+        mention_match = re.match("<@[!&](\d+)>", command[0])
         if mention_match is not None:
             target_user_id = int(mention_match[1])
         elif command[0].isdigit():
@@ -143,6 +146,11 @@ class DiscordClient(discord.Client):
                 return
             weight = float(command[1])
 
+        found = list(filter(lambda x: x.word == word, self.words))
+        if len(found) == 1:
+            await channel.send(f"🤔 **WTF**: すでにあります。`in10/check {word}`で確認してみてください。")
+            return
+
         self.db.add_word(word, weight)
         self.sync()
         await channel.send(f"✅ {command[0]}、追加しました")
@@ -170,7 +178,7 @@ class DiscordClient(discord.Client):
 
     async def help(self, channel: discord.TextChannel):
         await channel.send(
-            "<:sasuin:759097700326703179> **`in10-point` | 淫獣ポイントBot**\n"
+            "<:sasuin:759097700326703179> **`in10-point` | 淫獣ポイントBot** (Prefix: `in10/`, `/i0`)\n"
             "このサーバにいる人がどれくらい、どの程度変なこと言ったかを数値化して参照するためのBotです。\n"
             "```rank [制限: int]\n  淫獣ポイントのランキングを表示します。```"
             "```get <対象ユーザ: int/メンション>\n  特定のユーザの詳細情報を表示します。```"
