@@ -31,4 +31,17 @@ class DiscordClient(discord.Client):
         if message.author.bot:
             return
 
+        if message.content.startswith("in10/") or message.content.startswith("i0/"):
+            header_idx = message.content.index("/")
+            await self.handle_command(message.channel, message.content[header_idx + 1:].split(" "))
+
+        await self.handle_general_message(message.author, message.content)
+
+    async def handle_command(self, channel: discord.TextChannel, command: List[str]):
+        pass
+
+    async def handle_general_message(self, author: discord.Member, content: str):
+        pass
+
+
 
