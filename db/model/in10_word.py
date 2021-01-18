@@ -2,7 +2,7 @@ class In10Word:
     def __init__(self, word: str, weight: float):
         self.word = word
         self.raw_weight = weight
-        self.weight = weight if weight > 0 else len(word) * 0.005
+        self.weight = weight if weight > 0 else len(word) * 0.02
 
     @classmethod
     def from_tuple(cls, data: tuple):
