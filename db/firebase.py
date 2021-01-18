@@ -47,11 +47,10 @@ class FirebaseRealtimeDatabase:
         parsed_in10_info = list(map(lambda kv: In10Info.from_dict(kv[0], kv[1]), in10_data.items()))
         return parsed_in10_info
 
-
-    def add_user_in10_point(self, id, point, count):
+    def add_user_in10_point(self, id, name, point, count):
         in10_data_ref = db.reference(f"/in10-points/{id}")
         if in10_data_ref.get() is None:
-            in10_data_ref.set(In10Info(id, 0, 0).to_dict())
+            in10_data_ref.set(In10Info(id, name, 0, 0).to_dict())
 
         current_in10_point = self.get_user_in10_point(id)
         current_in10_point.count += count
