@@ -72,7 +72,10 @@ class DiscordClient(discord.Client):
             await self.get_user_info(channel, command[1:])
         elif command[0] == "add":
             await self.add_word(channel, command[1:])
-        pass
+        elif command[0] == "check":
+            await self.check_word(channel, command[1:])
+        elif command[0] == "help":
+            await self.help(channel)
 
     async def rank(self, channel: discord.TextChannel, command: List[str]):
         raw_limit = 10
@@ -142,6 +145,20 @@ class DiscordClient(discord.Client):
 
         self.db.add_word(word, weight)
 
+    async def check_word(self, channel: discord.TextChannel, command: List[str]):
+        if len(command) < 1:
+            await channel.send("💥 **犯すぞ**: 単語が必要です。")
+            return
+
+        found = list(filter(lambda x: x.word == command[0], self.words))
+        if len(found) == 0:
+            await channel.send(
+                f"✨ ***CLEAR*** ✨\n**「{command[0]}」は使ってもカウントされません**。\n"
+                f"「何故!?」となったら`in10/add {command[0]} [重み(任意)]` で追加できます。ぜひ。")
+            return
+
+        await channel.send(f"「{command[0]}」というと **{found[0].weight} pt(s).** 加算されます。")
+
     async def help(self, channel: discord.TextChannel):
         await channel.send(
             "<:sasuin:759097700326703179> **`in10-point` | 淫獣ポイントBot**\n"
@@ -150,6 +167,7 @@ class DiscordClient(discord.Client):
             "```get <対象ユーザ: int/メンション>\n  特定のユーザの詳細情報を表示します。```"
             "```add <ワード: str> [重み: float]\n  新しく単語を追加します。```"
             "```check <ワード: str>\n  指定した言葉がアウトかどうかを表示します。淫獣ポイントには加算されません。```"
+            "```\nsync\n  なんかの事情でFirebaseとこのBotの間で生じてしまった不整合をどうにかします。```"
             "```\nhelp\n  これです。```\n"
             f"免責事項: めんどくさくて設計をほぼ考えていません。{random.sample(DiscordClient.SIN, 1)[0]}\n"
             "そのうちリファクタするかもしれません。"
