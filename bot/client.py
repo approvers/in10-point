@@ -39,16 +39,19 @@ class DiscordClient(discord.Client):
 
     async def handle_general_message(self, author: discord.Member, content: str):
         add_point = 0
+        add_count = 0
         for word in self.words:
             if word.word not in content:
                 continue
             logger.info(f"{author.display_name}({author.id}) -> {str(word)}")
             add_point += word.weight
+            add_count += 1
 
-        if add_point == 0:
+        if add_count == 0:
             return
 
         logger.info(f"{author.display_name}({author.id}) -> +{add_point} pt(s).")
+        self.db.add_user_in10_point(author.id, add_point, add_count)
 
 
     async def handle_command(self, channel: discord.TextChannel, command: List[str]):
