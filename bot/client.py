@@ -105,6 +105,10 @@ class DiscordClient(discord.Client):
             return
 
         in10_data = self.db.get_user_in10_point(target_user_id)
+        if in10_data is None:
+            await channel.send("🤔 **WTF**: その人の淫獣ポイント情報がありません。たぶんまだ変なこと言ってないんだと思います。")
+            return
+
         embed = discord.Embed(colour=0xff00ff, title=f"{in10_data.name} さんの淫獣ポイント")
         embed.add_field(name="淫獣ポイント", value=f"**{in10_data.point}** pt(s).", inline=True)
         embed.add_field(name="カウント回数", value=f"**{in10_data.count}** 回", inline=True)

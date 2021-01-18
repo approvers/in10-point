@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import List
+from typing import List, Optional
 
 import firebase_admin
 from firebase_admin import credentials, db
@@ -31,10 +31,10 @@ class FirebaseRealtimeDatabase:
         dict_data = db.reference("/in10-dictory").get()
         return In10Word.from_dict(dict_data)
 
-    def get_user_in10_point(self, id) -> In10Info:
+    def get_user_in10_point(self, id) -> Optional[In10Info]:
         in10_data_ref = db.reference(f"/in10-points/{id}")
         if in10_data_ref.get() is None:
-            self.add_user_in10_point(id)
+            return None
 
         in10_data = in10_data_ref.get()
         return In10Info.from_dict(id, in10_data)
