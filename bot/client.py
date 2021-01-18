@@ -32,6 +32,7 @@ class DiscordClient(discord.Client):
             return
 
         if message.content.startswith("in10/") or message.content.startswith("i0/"):
+            logger.info(f"Command Smashed: {message.author.display_name}'{message.content}'")
             header_idx = message.content.index("/")
             await self.handle_command(message.channel, message.content[header_idx + 1:].split(" "))
 
@@ -51,11 +52,39 @@ class DiscordClient(discord.Client):
             return
 
         logger.info(f"{author.display_name}({author.id}) -> +{add_point} pt(s).")
-        self.db.add_user_in10_point(author.id, add_point, add_count)
-
+        self.db.add_user_in10_point(author.id, author.name, add_point, add_count)
 
     async def handle_command(self, channel: discord.TextChannel, command: List[str]):
+        if command[0] == "rank":
+            await self.rank(channel, command[1:])
         pass
+
+    async def rank(self, channel: discord.TextChannel, command: List[str]):
+        raw_limit = 10
+        if len(command) > 0:
+            if not command[0].isdigit():
+                await channel.send("💥 **犯すぞ**: `rank`コマンドの第1引数は†非負の数値†である必要があります。")
+                return
+            raw_limit = int(command[0])
+            if raw_limit == 0:
+                await channel.send("💥 **犯すぞ**: http://scp-jp.wikidot.com/scp-240-jp")
+                return
+
+        msg = await channel.send("⏳ ちょっと待ってください、今Firebaseに淫獣ポイントについて聞いています")
+
+        all_in10_info = self.db.get_all_in10_points()
+        sorted_in10_info = list(sorted(all_in10_info, key=lambda x: x.point))
+        stripped_in10_info = sorted_in10_info[:raw_limit]
+
+        padding_length = len(str(raw_limit))
+        content = "```asc\n"
+        for i in range(len(stripped_in10_info)):
+            in10_info = stripped_in10_info[i]
+            content += f"#{str(i + 1).rjust(padding_length)}: {in10_info.name} " \
+                      f"({in10_info.point}pt, {in10_info.count}回)\n"
+        content += "```"
+
+        await msg.edit(content=content)
 
 
 
