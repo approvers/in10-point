@@ -1,4 +1,4 @@
-import asyncio
+import datetime
 import logging
 import re
 import random
@@ -27,14 +27,12 @@ class DiscordClient(discord.Client):
         self.db = db
         self.init_message_channel = init_message_channel
         self.words: List[In10Word] = []
+        self.last_sync = datetime.datetime.now()
 
     async def on_ready(self):
         channel = await self.fetch_channel(self.init_message_channel)
         sent_message = await channel.send("🚀 `in10.json` を読み込んでいます。")
-
-        self.words = self.db.get_in10_words()
-        logger.info("Discord bot has been initialized successfully.")
-        logger.info(f"{len(self.words)} word(s) loaded.")
+        self.sync()
 
         await sent_message.edit(content="🚀 準備完了です！")
 
@@ -74,6 +72,8 @@ class DiscordClient(discord.Client):
             await self.add_word(channel, command[1:])
         elif command[0] == "check":
             await self.check_word(channel, command[1:])
+        elif command[0] == "sync":
+            await self.force_sync(channel)
         elif command[0] == "help":
             await self.help(channel)
 
@@ -144,6 +144,8 @@ class DiscordClient(discord.Client):
             weight = float(command[1])
 
         self.db.add_word(word, weight)
+        self.sync()
+        await channel.send(f"✅ {command[0]}、追加しました")
 
     async def check_word(self, channel: discord.TextChannel, command: List[str]):
         if len(command) < 1:
@@ -159,6 +161,13 @@ class DiscordClient(discord.Client):
 
         await channel.send(f"「{command[0]}」というと **{found[0].weight} pt(s).** 加算されます。")
 
+    async def force_sync(self, channel:  discord.TextChannel):
+        if datetime.datetime.now() - self.last_sync < datetime.timedelta(seconds=60):
+            await channel.send("**ちょっと待ってください**: `sync`の実行は一定時間置く必要があります。")
+            return
+        self.sync()
+        await channel.send(f"✅ 単語リストを†強制更新†しました。")
+
     async def help(self, channel: discord.TextChannel):
         await channel.send(
             "<:sasuin:759097700326703179> **`in10-point` | 淫獣ポイントBot**\n"
@@ -173,4 +182,7 @@ class DiscordClient(discord.Client):
             "そのうちリファクタするかもしれません。"
         )
 
-
+    def sync(self):
+        self.words = self.db.get_in10_words()
+        self.last_sync = datetime.datetime.now()
+        logger.info(f"{len(self.words)} word(s) loaded.")
