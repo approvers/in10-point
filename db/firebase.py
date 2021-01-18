@@ -39,6 +39,15 @@ class FirebaseRealtimeDatabase:
         in10_data = in10_data_ref.get()
         return In10Info.from_dict(id, in10_data)
 
+    def get_all_in10_points(self) -> List[In10Info]:
+        in10_data = db.reference(f"/in10-points").get()
+        if in10_data is None:
+            return []
+
+        parsed_in10_info = list(map(lambda kv: In10Info.from_dict(kv[0], kv[1]), in10_data.items()))
+        return parsed_in10_info
+
+
     def add_user_in10_point(self, id, point, count):
         in10_data_ref = db.reference(f"/in10-points/{id}")
         if in10_data_ref.get() is None:
