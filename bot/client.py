@@ -38,7 +38,18 @@ class DiscordClient(discord.Client):
         await self.handle_general_message(message.author, message.content)
 
     async def handle_general_message(self, author: discord.Member, content: str):
-        pass
+        add_point = 0
+        for word in self.words:
+            if word.word not in content:
+                continue
+            logger.info(f"{author.display_name}({author.id}) -> {str(word)}")
+            add_point += word.weight
+
+        if add_point == 0:
+            return
+
+        logger.info(f"{author.display_name}({author.id}) -> +{add_point} pt(s).")
+
 
     async def handle_command(self, channel: discord.TextChannel, command: List[str]):
         pass
