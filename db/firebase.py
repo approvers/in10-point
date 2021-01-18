@@ -58,3 +58,9 @@ class FirebaseRealtimeDatabase:
 
         in10_data_ref.set(current_in10_point.to_dict())
 
+    def add_word(self, word, weight):
+        dict_data_ref = db.reference("/in10-dictory")
+        dict_data = dict_data_ref.get()
+        dict_data[word] = weight
+        dict_data_ref.set(dict_data)
+

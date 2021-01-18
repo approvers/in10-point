@@ -70,6 +70,8 @@ class DiscordClient(discord.Client):
             await self.rank(channel, command[1:])
         elif command[0] == "get":
             await self.get_user_info(channel, command[1:])
+        elif command[0] == "add":
+            await self.add_word(channel, command[1:])
         pass
 
     async def rank(self, channel: discord.TextChannel, command: List[str]):
@@ -125,13 +127,28 @@ class DiscordClient(discord.Client):
         embed.add_field(name="平均ポイント", value=f"**{in10_data.point / in10_data.count}** pt/回", inline=False)
         await channel.send(embed=embed)
 
+    async def add_word(self, channel: discord.TextChannel, command: List[str]):
+        if len(command) < 1:
+            await channel.send("💥 **犯すぞ**: 単語が必要です。")
+            return
+
+        word = command[0]
+        weight = 0
+        if len(command) > 1:
+            if re.match(r"\d+\.\d+", command[1]) is not None:
+                await channel.send("💥 **犯すぞ**: 第2引数は小数であってほしいです。")
+                return
+            weight = float(command[1])
+
+        self.db.add_word(word, weight)
+
     async def help(self, channel: discord.TextChannel):
         await channel.send(
             "<:sasuin:759097700326703179> **`in10-point` | 淫獣ポイントBot**\n"
             "このサーバにいる人がどれくらい、どの程度変なこと言ったかを数値化して参照するためのBotです。\n"
             "```rank [制限: int]\n  淫獣ポイントのランキングを表示します。```"
             "```get <対象ユーザ: int/メンション>\n  特定のユーザの詳細情報を表示します。```"
-            "```add <ワード: str>\n  新しく単語を追加します。```"
+            "```add <ワード: str> [重み: float]\n  新しく単語を追加します。```"
             "```check <ワード: str>\n  指定した言葉がアウトかどうかを表示します。淫獣ポイントには加算されません。```"
             "```\nhelp\n  これです。```\n"
             f"免責事項: めんどくさくて設計をほぼ考えていません。{random.sample(DiscordClient.SIN, 1)[0]}\n"
